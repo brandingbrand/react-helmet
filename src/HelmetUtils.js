@@ -400,17 +400,46 @@ const updateAttributes = (tagName, attributes) => {
     for (let i = attributesToRemove.length - 1; i >= 0; i--) {
         elementTag.removeAttribute(attributesToRemove[i]);
     }
-
-    if (helmetAttributes.length === attributesToRemove.length) {
-        elementTag.removeAttribute(HELMET_ATTRIBUTE);
-    } else if (
-        elementTag.getAttribute(HELMET_ATTRIBUTE) !== attributeKeys.join(",")
-    ) {
-        elementTag.setAttribute(HELMET_ATTRIBUTE, attributeKeys.join(","));
-    }
 };
 
 const updateTags = (type, tags) => {
+    if (type === 'script') {
+      const bbNodes = document && document.head.querySelectorAll("script[data-bb-script]");
+      if (tags.length === bbNodes.length) {
+        return {
+          oldTags: [],
+          newTags: []
+        };
+      } else {
+        for (let i = 0; i < bbNodes.length; i++) {
+          bbNodes[i].parentNode.removeChild(bbNodes[i]);
+        }
+      }
+    } else if (type === 'link') {
+      const links = document && document.head.getElementsByTagName('link') || [];
+      const bbLinks = [];
+      for (let i = 0; i < links.length; i++) {
+        const href = links[i].getAttribute('href');
+        for (let j = 0; j < tags.length; j++) {
+          if (tags[j].href === href) {
+            bbLinks.push(links[i]);
+          }
+        }
+      }
+      if (bbLinks.length === tags.length) {
+        return {
+          oldTags: [],
+          newTags: []
+        };
+      } else {
+        for (let i = 0; i < bbLinks.length; i++) {
+          if (bbLinks[i].parentNode) {
+            bbLinks[i].parentNode.removeChild(bbLinks[i]);
+          }
+        }
+      }
+    }
+
     const headElement = document.head || document.querySelector(TAG_NAMES.HEAD);
     const tagNodes = headElement.querySelectorAll(
         `${type}[${HELMET_ATTRIBUTE}]`
@@ -444,7 +473,10 @@ const updateTags = (type, tags) => {
                 }
             }
 
-            newElement.setAttribute(HELMET_ATTRIBUTE, "true");
+            // Don't attach data attribute to links for SEO purposes
+            if (type !== 'link') {
+              newElement.setAttribute(HELMET_ATTRIBUTE, "true");
+            }
 
             // Remove a duplicate tag from domTagstoRemove, so it isn't cleared.
             if (
@@ -481,11 +513,11 @@ const generateTitleAsString = (type, title, attributes, encode) => {
     const attributeString = generateElementAttributesAsString(attributes);
     const flattenedTitle = flattenArray(title);
     return attributeString
-        ? `<${type} ${HELMET_ATTRIBUTE}="true" ${attributeString}>${encodeSpecialCharacters(
+        ? `<${type} ${attributeString}>${encodeSpecialCharacters(
               flattenedTitle,
               encode
           )}</${type}>`
-        : `<${type} ${HELMET_ATTRIBUTE}="true">${encodeSpecialCharacters(
+        : `<${type} ${encodeSpecialCharacters(
               flattenedTitle,
               encode
           )}</${type}>`;
@@ -515,7 +547,7 @@ const generateTagsAsString = (type, tags, encode) =>
 
         const isSelfClosing = SELF_CLOSING_TAGS.indexOf(type) === -1;
 
-        return `${str}<${type} ${HELMET_ATTRIBUTE}="true" ${attributeHtml}${isSelfClosing
+        return `${str}<${type} ${attributeHtml}${isSelfClosing
             ? `/>`
             : `>${tagContent}</${type}>`}`;
     }, "");
@@ -537,8 +569,7 @@ const convertReactPropstoHtmlAttributes = (props, initAttributes = {}) => {
 const generateTitleAsReactComponent = (type, title, attributes) => {
     // assigning into an array to define toString function on it
     const initProps = {
-        key: title,
-        [HELMET_ATTRIBUTE]: true
+        key: title
     };
     const props = convertElementAttributestoReactProps(attributes, initProps);
 
@@ -548,8 +579,7 @@ const generateTitleAsReactComponent = (type, title, attributes) => {
 const generateTagsAsReactComponent = (type, tags) =>
     tags.map((tag, i) => {
         const mappedTag = {
-            key: i,
-            [HELMET_ATTRIBUTE]: true
+            key: i
         };
 
         Object.keys(tag).forEach(attribute => {
