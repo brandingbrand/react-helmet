@@ -517,7 +517,7 @@ const generateTitleAsString = (type, title, attributes, encode) => {
               flattenedTitle,
               encode
           )}</${type}>`
-        : `<${type} ${encodeSpecialCharacters(
+        : `<${type}>${encodeSpecialCharacters(
               flattenedTitle,
               encode
           )}</${type}>`;
