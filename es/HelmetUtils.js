@@ -419,7 +419,7 @@ var generateElementAttributesAsString = function generateElementAttributesAsStri
 var generateTitleAsString = function generateTitleAsString(type, title, attributes, encode) {
     var attributeString = generateElementAttributesAsString(attributes);
     var flattenedTitle = flattenArray(title);
-    return attributeString ? "<" + type + " " + attributeString + ">" + encodeSpecialCharacters(flattenedTitle, encode) + "</" + type + ">" : "<" + type + " " + encodeSpecialCharacters(flattenedTitle, encode) + "</" + type + ">";
+    return attributeString ? "<" + type + " " + attributeString + ">" + encodeSpecialCharacters(flattenedTitle, encode) + "</" + type + ">" : "<" + type + ">" + encodeSpecialCharacters(flattenedTitle, encode) + "</" + type + ">";
 };
 
 var generateTagsAsString = function generateTagsAsString(type, tags, encode) {
